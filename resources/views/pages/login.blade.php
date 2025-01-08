@@ -28,9 +28,9 @@
                     class="col-lg-4 col-md-6 col-12 order-lg-1 min-vh-100 order-2 bg-white d-flex flex-column justify-content-center ">
                     <div class="m-3 p-4  ">
                         <div class="d-flex align-items-center  mb-5">
-                            <img src="{{ asset('img/jatim.png') }}" alt="logo" width="80"
-                                class="shadow-light rounded-circle ">
-                            <h4 class="text-dark font-weight-normal ml-4">Tes Tulis admin
+                            {{-- <img src="{{ asset('img/jatim.png') }}" alt="logo" width="80"
+                                class="shadow-light rounded-circle "> --}}
+                            <h4 class="text-dark font-weight-normal ml-4">Login Admin
                             </h4>
                         </div>
 
@@ -80,15 +80,15 @@
                                 Don't have an account? <a href="auth-register.html">Create new one</a>
                             </div> --}}
                         </form>
-                        <div class="mt-3 text-center">
+                        {{-- <div class="mt-3 text-center">
                             Don't have an account? <a href="{{ route('register.form') }}">Register</a>
-                        </div>
+                        </div> --}}
 
 
                     </div>
                 </div>
                 <div class="col-lg-8 col-12 order-lg-2 min-vh-100 position-relative overlay-gradient-bottom order-1"
-                    style="background: url('{{ asset('img/blk.jpeg') }}') no-repeat center center; 
+                    style="background: url('{{ asset('img/bg.png') }}') no-repeat center center; 
             background-size: cover;">
                 </div>
 
