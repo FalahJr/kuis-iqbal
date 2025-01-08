@@ -41,7 +41,7 @@ class FirebaseService
 
     public function __construct()
     {
-        $serviceAccountPath = base_path('config/firebase/cbt-kuis-firebase-adminsdk-2u4yg-ff66aaffbe.json');
+        $serviceAccountPath = base_path('config/firebase/cbt-kuis-firebase-adminsdk-2u4yg-1686ea021d.json');
 
         // dd(env('FIREBASE_CREDENTIALS'));
 
