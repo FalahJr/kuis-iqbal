@@ -34,19 +34,19 @@ class LoginController extends Controller
         }
 
         // Ambil data user dari Firebase
-        $users = $this->firebaseService->getReference('user')->getValue();
+        $users = $this->firebaseService->getReference('user');  // Tidak perlu menggunakan getValue() karena sudah berupa array
 
-        if ($users) {
+        // Cek apakah data users berupa array dan iterasi
+        if (is_array($users)) {
             foreach ($users as $user) {
-                if ($user['email'] === $request->email && $user['password'] === $request->password) {
+                if (isset($user['email']) && isset($user['password']) && $user['email'] === $request->email && $user['password'] === $request->password) {
                     // Set session user
                     Session::put('user', [
                         'email' => $user['email'],
                         'role' => 'Admin', // Sesuaikan role jika ada
-                        'nama' => $user['nama'] ?? 'Admin', // Default nama jika tidak ad
+                        'nama' => $user['nama'] ?? 'Admin', // Default nama jika tidak ada
                     ]);
 
-                    // dd($user);
                     return redirect('admin/home')->with('success', 'Login berhasil.');
                 }
             }
@@ -54,6 +54,8 @@ class LoginController extends Controller
 
         return redirect('login')->with('failed', 'Email atau password salah.');
     }
+
+
 
     public function logout_action()
     {

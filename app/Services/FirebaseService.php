@@ -2,68 +2,53 @@
 
 namespace App\Services;
 
-use Kreait\Firebase\Factory;
+use GuzzleHttp\Client;
 
 class FirebaseService
 {
-    protected $database;
-
-    // public function __construct()
-    // {
-    //     $serviceAccountPath = config('firebase.credentials.file');
-
-    //     if (!file_exists($serviceAccountPath)) {
-    //         throw new \Exception("Service account file not found at: {$serviceAccountPath}");
-    //     }
-
-    //     $firebase = (new Factory)
-    //         ->withServiceAccount($serviceAccountPath)
-    //         ->withDatabaseUri(config('firebase.database_url'));
-
-    //     $this->database = $firebase->createDatabase();
-    // }
-
-
-    // public function __construct()
-    // {
-    //     $serviceAccountPath = config('firebase.credentials.file');
-
-    //     if (!file_exists($serviceAccountPath)) {
-    //         throw new \Exception("Service account file not found at: {$serviceAccountPath}");
-    //     }
-
-    //     $firebase = (new Factory)
-    //         ->withServiceAccount($serviceAccountPath)
-    //         ->withDatabaseUri(config('firebase.database_url'));
-
-    //     $this->database = $firebase->createDatabase();
-    // }
+    protected $client;
+    protected $databaseUrl;
+    protected $databaseSecret;
 
     public function __construct()
     {
-        $serviceAccountPath = base_path('config/firebase/cbt-kuis-firebase-adminsdk-2u4yg-1686ea021d.json');
+        $this->databaseUrl = env('FIREBASE_DATABASE_URL'); // Ambil URL dari .env
+        $this->databaseSecret = env('FIREBASE_DATABASE_SECRET'); // Ambil secret dari .env
 
-        // dd(env('FIREBASE_CREDENTIALS'));
-
-        // Debug: Log path yang dicari
-        if (!$serviceAccountPath) {
-            throw new \Exception("FIREBASE_CREDENTIALS is not set in your .env file");
+        if (!$this->databaseUrl || !$this->databaseSecret) {
+            throw new \Exception('FIREBASE_DATABASE_URL or FIREBASE_DATABASE_SECRET is missing in your .env file');
         }
 
-        if (!file_exists($serviceAccountPath)) {
-            throw new \Exception("Service account file not found at: {$serviceAccountPath}");
-        }
-
-        $firebase = (new Factory)
-            ->withServiceAccount($serviceAccountPath)
-            ->withDatabaseUri('https://cbt-kuis-default-rtdb.firebaseio.com');
-
-        $this->database = $firebase->createDatabase();
+        $this->client = new Client();
     }
-
 
     public function getReference($path)
     {
-        return $this->database->getReference($path);
+        $url = "{$this->databaseUrl}/{$path}.json?auth={$this->databaseSecret}";
+
+        try {
+            $response = $this->client->get($url);
+            $body = $response->getBody();
+            $data = json_decode($body, true);
+
+            return $data;
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to fetch data from Firebase: " . $e->getMessage());
+        }
+    }
+
+    public function setReference($path, $data)
+    {
+        $url = "{$this->databaseUrl}/{$path}.json?auth={$this->databaseSecret}";
+
+        try {
+            $response = $this->client->put($url, [
+                'json' => $data
+            ]);
+            $body = $response->getBody();
+            return json_decode($body, true);
+        } catch (\Exception $e) {
+            throw new \Exception("Failed to set data to Firebase: " . $e->getMessage());
+        }
     }
 }

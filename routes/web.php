@@ -23,24 +23,28 @@ use App\Services\FirebaseService;
 */
 
 // Route::redirect('/', '/login');
+Route::get('/test-firebase', function (FirebaseService $firebaseService) {
+    try {
+        $reference = $firebaseService->getReference('test-connection');
+        dd($reference);  // Debug nilai $reference
+
+        // Pastikan $reference adalah objek yang benar
+        $reference->set(['status' => 'connected', 'timestamp' => now()]);
+
+        return response()->json([
+            'message' => 'Firebase connected successfully!',
+            'data' => $reference->getValue(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Firebase connection failed!',
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
 
 
-// Route::get('/test-firebase', function (FirebaseService $firebaseService) {
-//     try {
-//         $reference = $firebaseService->getReference('test-connection');
-//         $reference->set(['status' => 'connected', 'timestamp' => now()]);
-
-//         return response()->json([
-//             'message' => 'Firebase connected successfully!',
-//             'data' => $reference->getValue(),
-//         ]);
-//     } catch (\Exception $e) {
-//         return response()->json([
-//             'message' => 'Firebase connection failed!',
-//             'error' => $e->getMessage(),
-//         ], 500);
-//     }
-// });
 // Dashboard
 Route::get('/home', function () {
     return view('pages.dashboard', ['type_menu' => 'dashboard']);
