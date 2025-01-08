@@ -2,7 +2,7 @@
     <aside id="sidebar-wrapper">
         <div class="sidebar-brand">
             <a href="index.html" class="" style="width:100%">
-                <img alt="image" class="rounded-circle mr-1" width="50" src="{{ asset('img/jatim.png') }}">
+                {{-- <img alt="image" class="rounded-circle mr-1" width="50" src="{{ asset('img/jatim.png') }}"> --}}
                 <span style="width: 50%">Admin Dashboard</span>
             </a>
         </div>
