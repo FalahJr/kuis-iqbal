@@ -18,31 +18,22 @@
 
                 </div>
             </div>
+
+
+
             <div class="row">
-                <div class="col-lg-12 col-md-12 col-12 col-sm-12">
-                    <div class="section-header">
-                        <div class="d-flex flex-column">
-                            <h1>HALO !!!</h1>
-                            <p>Yuk kita belajar bersama</p>
+
+                <div class="col-9">
+                    <div class="section-header flex-column align-items-start ">
+                        <div class="d-flex justify-content-between align-items-center w-100">
+                            <h1>Selamat Datang Admin</h1>
                         </div>
+
                     </div>
                 </div>
-                {{-- <div class="col-lg-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4>Calendar</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="fc-overflow">
-                                <div id="myEvent"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
+
+
             </div>
-
-
-
 
 
         </section>
