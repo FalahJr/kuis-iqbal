@@ -53,7 +53,7 @@ return [
             // 'credentials' => env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
 
             'credentials' => [
-                'file' => base_path('config/firebase/cbt-kuis-firebase-adminsdk-2u4yg-a01a6cb2b4.json'),
+                'file' => base_path('config/firebase/cbt-kuis-firebase-adminsdk-2u4yg-ff66aaffbe.json'),
             ],
             'database_url' => env('FIREBASE_DATABASE_URL'),
             /*
