@@ -149,29 +149,33 @@ class QuizController extends Controller
     // Method Destroy - Menghapus data quiz dari Firebase
     public function destroy($id)
     {
-        try {
-            $quizzes = $this->firebaseService->getReference('nama_quiz');
+        // Ambil data semua quiz dari Firebase
+        $quizzes = $this->firebaseService->getReference('nama_quiz');
 
-            $quizToDelete = null;
-            foreach ($quizzes as $key => $quiz) {
-                if ($quiz['quiz_id'] == $id) {
-                    $quizToDelete = $key;
-                    break;
-                }
+        // Cari quiz yang sesuai dengan ID
+        $quizToDelete = null;
+        foreach ($quizzes as $key => $quiz) {
+            if (isset($quiz['quiz_id']) && $quiz['quiz_id'] == $id) {
+                $quizToDelete = $key;
+                break;
             }
-
-            if ($quizToDelete === null) {
-                return redirect()->route('admin.quiz.index')->with('error', 'Quiz tidak ditemukan.');
-            }
-
-            $this->firebaseService->setReference("soal/{$id}", null);
-            $this->firebaseService->setReference('nama_quiz/' . $quizToDelete, null);
-
-            return redirect()->route('admin.quiz.index')->with('success', 'Quiz beserta soal berhasil dihapus!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+
+        // Jika quiz tidak ditemukan
+        if ($quizToDelete === null) {
+            return redirect()->route('admin.quiz.index')->with('error', 'Quiz tidak ditemukan.');
+        }
+
+        // Hapus data soal terkait quiz
+        $this->firebaseService->setReference("soal/{$id}", null);
+
+        // Hapus data quiz dari daftar nama_quiz
+        $this->firebaseService->setReference("nama_quiz/{$quizToDelete}", null);
+
+        // Redirect ke halaman index dengan pesan sukses
+        return redirect()->route('admin.quiz.index')->with('success', 'Quiz beserta soal berhasil dihapus!');
     }
+
 
     public function indexSoal($quizId)
     {
@@ -186,36 +190,83 @@ class QuizController extends Controller
         return view('pages.soal-manage', compact('soal', 'quizId'));
     }
 
+    public function createQuestion($quizId)
+    {
+        $quizId = $quizId;
+
+        return view('pages.add-question', compact('quizId'));
+    }
     public function storeQuestion(Request $request, $quizId)
     {
         $validated = $request->validate([
-            'pertanyaan' => 'string',
-            'pilihan' => 'array|min:4|max:4',
-            'jawaban' => 'integer|min:0|max:3',
+            'pertanyaan' => 'required|string',
+            'pilihan' => 'required|array|min:4|max:4',
+            'jawaban' => 'required|integer|min:0|max:3',
         ]);
 
+        // Data soal baru
         $soal = [
             'pertanyaan' => $validated['pertanyaan'],
             'pilihan' => $validated['pilihan'],
             'jawaban' => $validated['jawaban'],
         ];
 
-        $quizRef = $this->firebaseService->getReference("soal/{$quizId}");
+        try {
+            // Ambil data soal yang sudah ada
+            $existingData = $this->firebaseService->getReference("soal/{$quizId}/data") ?? [];
 
-        $quizData = $quizRef ?? ['data' => [$soal]];
+            // Tambahkan soal baru
+            $existingData[] = $soal;
 
-        $quizData['data'][] = $soal;
+            // Simpan data kembali ke Firebase
+            $this->firebaseService->setReference("soal/{$quizId}/data", $existingData);
 
-        $isSaved = $quizRef->set($quizData);
-
-        if ($isSaved !== null) {
             return redirect()->route('admin.quiz.indexSoal', $quizId)
                 ->with('success', 'Soal berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.quiz.indexSoal', $quizId)
+                ->with('error', 'Gagal menambahkan soal: ' . $e->getMessage());
+        }
+    }
+
+    // public function editQuestion($quizId, $questionId)
+    // {
+    //     // dd($questionId);
+    //     try {
+    //         // Ambil data soal dari Firebase menggunakan FirebaseService
+    //         $firebaseService = new FirebaseService();
+    //         $questionData = $firebaseService->getReference("soal/{$quizId}/data/{$questionId}");
+
+    //         if (!$questionData) {
+    //             return redirect()->route('admin.quiz.indexSoal', $quizId)
+    //                 ->with('error', 'Soal tidak ditemukan.');
+    //         }
+
+    //         // Tampilkan view edit dengan data soal
+    //         return view('pages.edit-question', compact('quizId', 'questionId', 'questionData'));
+    //     } catch (\Exception $e) {
+    //         // Tangani error saat mengambil data dari Firebase
+    //         return redirect()->route('admin.quiz.indexSoal', $quizId)
+    //             ->with('error', 'Terjadi kesalahan saat mengambil data soal: ' . $e->getMessage());
+    //     }
+    // }
+
+    public function editQuestion($quizId, $questionId)
+    {
+        // Ambil data soal dari Firebase
+        $firebaseService = new FirebaseService();
+        $questionData = $firebaseService->getReference("soal/{$quizId}/data/{$questionId}");
+
+        // Validasi jika data tidak ditemukan
+        if (is_null($questionData)) {
+            return redirect()->route('admin.quiz.indexSoal', $quizId)
+                ->with('error', 'Soal tidak ditemukan.');
         }
 
-        return redirect()->route('admin.quiz.indexSoal', $quizId)
-            ->with('error', 'Gagal menambahkan soal. Silakan coba lagi.');
+        // Tampilkan view edit dengan data soal
+        return view('pages.edit-question', compact('quizId', 'questionId', 'questionData'));
     }
+
 
     public function updateQuestion(Request $request, $quizId, $questionId)
     {
@@ -225,47 +276,41 @@ class QuizController extends Controller
             'jawaban' => 'required|integer|min:0|max:3',
         ]);
 
-        $soal = [
+        // Data soal baru
+        $updatedSoal = [
             'pertanyaan' => $validated['pertanyaan'],
             'pilihan' => $validated['pilihan'],
             'jawaban' => $validated['jawaban'],
         ];
 
-        $questionRef = $this->firebaseService->getReference("soal/{$quizId}/data/{$questionId}");
-
-        $isUpdated = $questionRef->set($soal);
-
-        if ($isUpdated !== null) {
-            return redirect()->route('admin.quiz.indexSoal', $quizId)
-                ->with('success', 'Soal berhasil diperbarui.');
-        }
+        $firebaseService = new FirebaseService();
+        $firebaseService->setReference("soal/{$quizId}/data/{$questionId}", $updatedSoal);
 
         return redirect()->route('admin.quiz.indexSoal', $quizId)
-            ->with('error', 'Gagal memperbarui soal. Silakan coba lagi.');
+            ->with('success', 'Soal berhasil diperbarui.');
     }
+
 
     public function deleteQuestion($quizId, $questionId)
     {
-        try {
-            $quizRef = $this->firebaseService->getReference("soal/{$quizId}");
+        // Ambil data quiz dari Firebase
+        $quizData = $this->firebaseService->getReference("soal/{$quizId}");
 
-            $quizData = $quizRef->getValue();
+        if ($quizData && isset($quizData['data'][$questionId])) {
+            // Hapus soal dari array data
+            unset($quizData['data'][$questionId]);
 
-            if ($quizData && isset($quizData['data'][$questionId])) {
-                unset($quizData['data'][$questionId]);
-                $quizData['data'] = array_values($quizData['data']);
-                $quizRef->set($quizData);
+            // Reindex array untuk memastikan urutannya konsisten
+            $quizData['data'] = array_values($quizData['data']);
 
-                return redirect()->route('admin.quiz.indexSoal', $quizId)
-                    ->with('success', 'Soal berhasil dihapus.');
-            } else {
-                return redirect()->route('admin.quiz.indexSoal', $quizId)
-                    ->with('error', 'Soal tidak ditemukan.');
-            }
-        } catch (DatabaseException $e) {
-            \Log::error('Error deleting question: ' . $e->getMessage());
+            // Simpan kembali data yang telah diperbarui
+            $this->firebaseService->setReference("soal/{$quizId}", $quizData);
+
             return redirect()->route('admin.quiz.indexSoal', $quizId)
-                ->with('error', 'Gagal menghapus soal. Silakan coba lagi.');
+                ->with('success', 'Soal berhasil dihapus.');
         }
+
+        return redirect()->route('admin.quiz.indexSoal', $quizId)
+            ->with('error', 'Soal tidak ditemukan.');
     }
 }

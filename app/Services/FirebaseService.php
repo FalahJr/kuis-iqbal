@@ -37,14 +37,35 @@ class FirebaseService
         }
     }
 
+    // public function setReference($path, $data)
+    // {
+    //     $url = "{$this->databaseUrl}/{$path}.json?auth={$this->databaseSecret}";
+
+    //     try {
+    //         $response = $this->client->put($url, [
+    //             'json' => $data
+    //         ]);
+    //         $body = $response->getBody();
+    //         return json_decode($body, true);
+    //     } catch (\Exception $e) {
+    //         throw new \Exception("Failed to set data to Firebase: " . $e->getMessage());
+    //     }
+    // }
+
     public function setReference($path, $data)
     {
         $url = "{$this->databaseUrl}/{$path}.json?auth={$this->databaseSecret}";
 
         try {
-            $response = $this->client->put($url, [
-                'json' => $data
-            ]);
+            // Gunakan metode DELETE jika data adalah null
+            if ($data === null) {
+                $response = $this->client->delete($url);
+            } else {
+                $response = $this->client->put($url, [
+                    'json' => $data
+                ]);
+            }
+
             $body = $response->getBody();
             return json_decode($body, true);
         } catch (\Exception $e) {
